@@ -5,6 +5,168 @@ import urllib.request
 import json
 import os
 import ssl
+import pandas as pd
+from time import sleep
+import matplotlib.pyplot as plt
+
+df=pd.read_csv("daily_agg.csv")
+
+def dark_theme():
+  custom_css = """
+  <style>
+  body {
+      background-color: #222;
+      color: #fff;
+  }
+  div[data-baseweb="avatar"][data-baseweb="avatar"][data-baseweb="avatar"][data-baseweb="avatar"] {
+      background-color: #222;
+  }
+  div[data-baseweb="avatar"][data-baseweb="avatar"] {
+      background-color: #222;
+  }
+  div[data-baseweb="avatar"] {
+    background-color: #222;
+  }
+  div[data-baseweb="avatar"][data-baseweb="avatar"][data-baseweb="avatar"] {
+    background-color: #222;
+  }
+    </style>
+    """
+  st.markdown(custom_css, unsafe_allow_html=True)
+
+dates_list=[]
+def date_range(selected_date):
+    """use for getting 3 days of future and past dates """
+    dates_list=[item.strftime("%Y/%m/%d") for item in  pd.date_range(pd.Timestamp(selected_date)-pd.offsets.Day(2),freq='D',periods=3)]
+    future_dates=[item for item in pd.date_range(start=pd.Timestamp(selected_date)+pd.offsets.Day(1),freq='D',periods=3)]
+    for item in future_dates:
+        dates_list.append(item.strftime('%Y/%m/%d'))
+    return dates_list
+
+def url_call(data,year,month,day):
+    """use to call url for our project"""
+    body = str.encode(json.dumps(data))
+    url = 'http://ff8b8ccf-0dfb-48f0-b6f3-5e7954b6d1c6.eastus.azurecontainer.io/score'
+    headers = {'Content-Type':'application/json'}
+    req = urllib.request.Request(url, body, headers)
+    try:
+        response = urllib.request.urlopen(req)
+        result = json.loads(response.read())
+        return result
+        # with st.button("predict"):
+        #   st.write("Predicted Ride Count:")
+        #   st.title(int(round(result["Results"][0])))
+        #   st.write(f"At  {year}-{month}-{day} ")
+    except urllib.error.HTTPError as error:
+        print("The request failed with status code: " + str(error.code))
+        st.write("The request failed with status code: " + str(error.code))
+        print(error.info())
+        print(error.read().decode("utf8", 'ignore'))
+
+def allowSelfSignedHttps(allowed):
+    """ allow to connect azure using env variable """
+    if allowed and not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None):
+        ssl._create_default_https_context = ssl._create_unverified_context
+allowSelfSignedHttps(True) 
+
+def conditions(season,workday):
+  """conditions for checking season and workday"""
+  if day  in ["Mon","Tues","Wed","Thur","Fri"]:
+    workday=1
+  else:
+    workday=0
+  if month in [12, 1, 2]:
+    season="Winter"
+  elif month in [3, 4, 5]:
+    season="Spring"
+  elif month in [6, 7, 8]:
+    season="Summer"
+  elif month in [9, 10, 11]:
+    season="Autumn"
+
+#  PREVIOUS YEARS DATA (2021,2022)
+def previous_dates():
+  """if you want to show graphs of dates that are present in df"""
+  previous_RC_list={}
+  previ=["2021","2022"]
+  for previous_year in previ:
+    conditions = {
+            "PickupBorough": pickup_location, #Bronx, Brooklyn, EWR, Manhattan, Queens, Staten Island.
+            "RideType": taxi_type, #Green Taxi, Yellow Taxi, High Volume For-Hire Vehicle.
+            "Date":str(f"{year}\{month}\{day}")
+  }
+    condition_mask = (df[list(conditions.keys())] == list(conditions.values())).all(axis=1)
+    RC_for_previous_year = (df.RideCount[condition_mask])
+    print(f'hello {(RC_for_previous_year)}')
+    previous_RC_list[previous_year]=RC_for_previous_year
+  plt.figure(figsize=(10, 6))
+  fig, ax = plt.subplots()
+  ax.bar(previ,['20','300'])
+  ax.set_xlabel("Pickup Borough")
+  ax.set_ylabel("Ride Count")
+  ax.set_title("Previous Year Data")
+  plt.show()
+  st.pyplot(fig)
+
+def checking_results(result:int):
+    if result < 0:
+      result=0
+    elif result >= 0:
+      pass
+    return result
+    
+      
+
+def graphs_st(dates:list,results):
+  """ showing graphs of dates and their respective results """
+  # Convert the date strings to datetime objects
+  try:
+    dates = [pd.to_datetime(date) for date in dates]
+
+    # Create a line chart
+    fig, ax = plt.subplots()
+    data_dict = {
+    'x': dates,
+    'y': results
+}
+
+    st.line_chart(data_dict)
+    # ax.plot(dates,results, marker='o', linestyle='-')
+    # st.line_chart(dates,results, color="col3")
+
+    # Customize the chart
+    # ax.set_title('RideCounts for specific date in NYK')
+    # ax.set_xlabel('Date')
+    # ax.set_ylabel('Results')
+    # ax.grid(True)
+
+    # # Display the chart using st.pyplot()
+    # st.pyplot(fig)
+  except:
+    pass
+
+custom_css = """
+  <style>
+  body {
+      background-color: #222;
+      color: #fff;
+  }
+  div[data-baseweb="avatar"][data-baseweb="avatar"][data-baseweb="avatar"][data-baseweb="avatar"] {
+      background-color: #222;
+  }
+  div[data-baseweb="avatar"][data-baseweb="avatar"] {
+      background-color: #222;
+  }
+  div[data-baseweb="avatar"] {
+    background-color: #222;
+  }
+  div[data-baseweb="avatar"][data-baseweb="avatar"][data-baseweb="avatar"] {
+    background-color: #222;
+  }
+    </style>
+    """
+
+st.markdown(custom_css, unsafe_allow_html=True)
 
 st.title("NYC (New York City) Taxi Ride Count Prediction")
 
@@ -24,95 +186,58 @@ You can try the prediction model below yourself.
 st.write("You can adjust some parameters according to your need, ")
 pickup_location = st.selectbox("Pickup Borough", ["Manhattan","Bronx", "Brooklyn", "EWR",  "Queens", "Staten Island" ])
 
-selected_date = st.date_input("Select a date from 2023 onwards", date(2023, 1, 1))
-year = selected_date.year
+selected_date = st.date_input("Date in the future", date(2023, 1, 1))
+year = int(selected_date.year)
 month = int(selected_date.month)
-day = selected_date.day
-
+day = int(selected_date.day)
 
 selected_day = selected_date.strftime("%A")[0:3]
-st.write(f"You selected {selected_day} in week")
-if day  in ["Monday","Tuesday","Wednesday","Thursday","Friday"]:
-  workday=1
-else:
-  workday=0
 
-# season_dict={ [['12','1','2']]:"Winter",[['3','4','5']]:"Spring",[['6','7','8']]:"Summer",[['9','10','11']]:"Autumn"}
-# season_dict={ ['12','1','2']:"Winter",['3','4','5']:"Spring",['6','7','8']:"Summer",['9','10','11']:"Autumn"}
-# season_dict={ "Winter":['12','1','2'],"Spring":['3','4','5'],"Summer":['6','7','8'],"Autumn":['9','10','11']}
 
-if month==12 and month <6:
-  season="Winter"
-elif month>5 and month <9:
-  season="Spring"
-elif month>8 and month <11:
-  season="Summer"
-else:
-  season="Autumn"
-# for month_index in season_dict.keys():
-    # print(month)
-    # if True:
-        # print(season_dict.get())
-        # print("hkjhkhkjh")
-# season = st.selectbox("Select a season", ["Spring", "Summer", "Fall", "Winter"])
-taxi_type = st.selectbox("Select a taxi", ["GREEN Taxi", "Yellow Taxi", "High Volume For-Hire Vehicle"])
+taxi_type = st.selectbox("Select a taxi", ["Green Taxi", "Yellow Taxi", "High Volume For-Hire Vehicle"])
 
 #  -------------------------------------
 
-def allowSelfSignedHttps(allowed):
-    # bypass the server certificate verification on client side
-    if allowed and not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None):
-        ssl._create_default_https_context = ssl._create_unverified_context
-allowSelfSignedHttps(True) # this line is needed if you use self-signed certificate in your scoring service.
+all_result=[]
+dates_to_predict=None
+button_press=0
 
-# Request data goes here
-# The example below assumes JSON formatting which may be updated
-# depending on the format your endpoint expects.
-# More information can be found here:
-# https://docs.microsoft.com/azure/machine-learning/how-to-deploy-advanced-entry-script
-data =  {
-  "Inputs": {
-    "data": [
-      {
-        "PickupBorough": pickup_location, #Bronx, Brooklyn, EWR, Manhattan, Queens, Staten Island.
-        "RideType": taxi_type, #Green Taxi, Yellow Taxi, High Volume For-Hire Vehicle.
-        "Year": year, # 2021, 2022, 2023..
-        "Month": month, # 1 - 12
-        "Day": day, # 1 - 31
-        "Season": season, #Spring, Summer, Autumn, Winter
-  
-        # "PublicHoliday": 0, # 1 (Yes), 0 (No)
-        "DayOfWeek": selected_day, #Sun, Mon, Tue, Wed, Thu, Fri, Sat
-        "Workday": workday # 1 (Yes), 0 (No)
-      }
-    ]
-  },
-  "GlobalParameters": 1.0
-}
+if st.button("Use AI to predict"):
+    
+    button_press+=1
+    dates_to_predict=date_range(str(selected_date))
+    # st.write(dates_to_predict)
+    for item in dates_to_predict:
+      year1 = item[:4]
+      month1 = item[5:7]
+      day1=item[9:]
+      workday=0
+      season=""
+      conditions(season=season,workday=workday)
+      data =  {
+      "Inputs": {
+        "data": [
+          {
+            "PickupBorough": pickup_location, 
+            "RideType": taxi_type, 
+            "Year": year1, 
+            "Month": month1,
+            "Day": day1, 
+            "Season": season, 
+            "DayOfWeek": selected_day, 
+            "Workday": workday
+          }
+        ]
+      },
+      "GlobalParameters": 1.0
+    }
+      result = url_call(data=data,year=year1,month=month1,day=day1)
+      result=int(round(result["Results"][0]))
+      result=checking_results(result)
+      all_result.append(result)
 
+      # st.write(f"At {year1}-{month1}-{day1}")
+# st.write(all_result[2])
+graphs_st(dates=dates_to_predict,results=all_result)
 
-body = str.encode(json.dumps(data))
-
-url = 'http://ff8b8ccf-0dfb-48f0-b6f3-5e7954b6d1c6.eastus.azurecontainer.io/score'
-
-
-headers = {'Content-Type':'application/json'}
-req = urllib.request.Request(url, body, headers)
-if st.button("Predict value"):
-    try:
-        response = urllib.request.urlopen(req)
-
-        result = json.loads(response.read())
-        st.write("Predicted Ride Count:" )
-        st.title(int(round(result["Results"][0])))
-        st.write(f"At  {year}-{month}-{day} ")
-
-        # st.write(f"The ride count is {int(round(result['Results'][0],3))} \t At:>  DATE: {year}-{month}-{day}")
-    except urllib.error.HTTPError as error:
-        print("The request failed with status code: " + str(error.code))
-        st.write("The request failed with status code: " + str(error.code))
-        # Print the headers - they include the requert ID and the timestamp, which are useful for debugging the failure
-        print(error.info())
-        print(error.read().decode("utf8", 'ignore'))
-
-# api_call(data)
+ 
