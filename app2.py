@@ -8,6 +8,9 @@ import ssl
 import pandas as pd
 from time import sleep
 import matplotlib.pyplot as plt
+from bokeh.plotting import figure
+import numpy as np
+import altair as alt
 
 df=pd.read_csv("daily_agg.csv")
 
@@ -53,10 +56,7 @@ def url_call(data,year,month,day):
         response = urllib.request.urlopen(req)
         result = json.loads(response.read())
         return result
-        # with st.button("predict"):
-        #   st.write("Predicted Ride Count:")
-        #   st.title(int(round(result["Results"][0])))
-        #   st.write(f"At  {year}-{month}-{day} ")
+
     except urllib.error.HTTPError as error:
         print("The request failed with status code: " + str(error.code))
         st.write("The request failed with status code: " + str(error.code))
@@ -91,8 +91,8 @@ def previous_dates():
   previ=["2021","2022"]
   for previous_year in previ:
     conditions = {
-            "PickupBorough": pickup_location, #Bronx, Brooklyn, EWR, Manhattan, Queens, Staten Island.
-            "RideType": taxi_type, #Green Taxi, Yellow Taxi, High Volume For-Hire Vehicle.
+            "PickupBorough": pickup_location,
+            "RideType": taxi_type, 
             "Date":str(f"{year}\{month}\{day}")
   }
     condition_mask = (df[list(conditions.keys())] == list(conditions.values())).all(axis=1)
@@ -119,31 +119,38 @@ def checking_results(result:int):
 
 def graphs_st(dates:list,results):
   """ showing graphs of dates and their respective results """
-  # Convert the date strings to datetime objects
-  try:
-    dates = [pd.to_datetime(date) for date in dates]
+  date = [str(single_date) for single_date in dates]  
+  if len(dates) != len(results):
+        st.write("Error: The 'dates' and 'results' lists must have the same length.")
+  else:
+        try:
+            date = [str(single_date) for single_date in dates]
+            chart_data = pd.DataFrame(
+                {
+                    "Date": date,
+                    "Results": results,
+                }
+            )
 
-    # Create a line chart
-    fig, ax = plt.subplots()
-    data_dict = {
-    'x': dates,
-    'y': results
-}
+            # Altair chart for better and visualization
+            st.subheader("Dates and Results for NYC taxi prediction")
+            st.markdown("This chart shows the relationship between dates and results.")
+            st.write("Date Range:", min(date), "to", max(date))
+            st.write("Results Range:", min(results), "to", max(results))
 
-    st.line_chart(data_dict)
-    # ax.plot(dates,results, marker='o', linestyle='-')
-    # st.line_chart(dates,results, color="col3")
+            chart = alt.Chart(chart_data).mark_line().encode(
+                x='Date',
+                y='Results:Q',
+                tooltip=['Date', 'Results:Q']
+            )+ alt.Chart(chart_data).mark_point().encode(
+                x='Date:T',
+                y='Results:Q'
+            ).interactive()
 
-    # Customize the chart
-    # ax.set_title('RideCounts for specific date in NYK')
-    # ax.set_xlabel('Date')
-    # ax.set_ylabel('Results')
-    # ax.grid(True)
+            st.altair_chart(chart, use_container_width=True)
 
-    # # Display the chart using st.pyplot()
-    # st.pyplot(fig)
-  except:
-    pass
+        except ValueError as e:
+            st.write(f"An error occurred: {e}")
 
 custom_css = """
   <style>
@@ -163,9 +170,13 @@ custom_css = """
   div[data-baseweb="avatar"][data-baseweb="avatar"][data-baseweb="avatar"] {
     background-color: #222;
   }
+
+  footer:after{
+  content: " By Usman @ 2023"
+  }
     </style>
     """
-
+st.markdown('<div class="stFooter">MADE BY USMAN</div>', unsafe_allow_html=True)
 st.markdown(custom_css, unsafe_allow_html=True)
 
 st.title("NYC (New York City) Taxi Ride Count Prediction")
@@ -203,10 +214,8 @@ dates_to_predict=None
 button_press=0
 
 if st.button("Use AI to predict"):
-    
     button_press+=1
     dates_to_predict=date_range(str(selected_date))
-    # st.write(dates_to_predict)
     for item in dates_to_predict:
       year1 = item[:4]
       month1 = item[5:7]
@@ -235,9 +244,8 @@ if st.button("Use AI to predict"):
       result=int(round(result["Results"][0]))
       result=checking_results(result)
       all_result.append(result)
+    st.title(f" {all_result[2]}")
+    graphs_st(dates=dates_to_predict,results=all_result)
 
-      # st.write(f"At {year1}-{month1}-{day1}")
-# st.write(all_result[2])
-graphs_st(dates=dates_to_predict,results=all_result)
 
  
