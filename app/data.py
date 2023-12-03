@@ -1,12 +1,18 @@
 import pandas as pd
 
 class Data:
-    def __init__(self,csv_data,selected_date,taxi,location,selected_day,**kwargs) -> None:
-        self.data=csv_data
+    def __init__(self,selected_date,taxi,location,selected_day,yellow_taxi_data,green_taxi_data,hv_data,**kwargs) -> None:
+        
         self.selected_date=selected_date
-        self.selected_taxi=taxi
+        self.selected_taxi="Green Taxi"
         self.selected_day=selected_day
         self.location=location
+        
+        #  data of csv
+        self.y_taxi=yellow_taxi_data
+        self.g_taxi=green_taxi_data
+        self.hv=hv_data
+
         self.dicti=kwargs
         self.dates_list=[]
         self.previous_year_ride_counts={}
@@ -22,23 +28,54 @@ class Data:
 
     def previous_values(self)->dict:
         """if you want to show graphs of dates that are present in df"""
-        previ=["2021","2022"]
+        previ=["2020","2021","2022"]
         for previous_year in previ:
             single_year_data=[]
             for single_date in self.dates_list:
                 month1 = str(single_date[5:7])
                 day1=str(single_date[8:])
-                conditions = {
-                        "PickupBorough": self.location,
-                        "RideType": self.selected_taxi,
-                        "Date":f"{day1}/{month1}/{previous_year}"
+                # print(single_date)
+                x=previous_year+"-"+month1+"-"+day1
+                dataframe1,condition_mask=None,None
+                conditions={
+                    "PickupBorough":self.location,
+                    "RideType":self.selected_taxi,
+                    "Date":x
                 }
-                condition_mask = (self.data[list(conditions.keys())] == list(conditions.values())).all(axis=1)
                 
-                RC_for_previous_year = (self.data.RideCount[condition_mask])
                 
+                # print(self.y_taxi.Date[f"{previous_year}-{month1}-{day1}"])
+                print(f"location: {self.location},ridetype: {self.selected_taxi},date: ")
+#  1 cond
+                if self.selected_taxi=="Green Taxi":
+                    dataframe1=self.g_taxi
+                    condition_mask = (
+                        (dataframe1['PickupBorough'] == conditions['PickupBorough']) &
+                        (dataframe1['RideType'] == conditions['RideType']) &
+                        (dataframe1['Date'] == conditions['Date'])
+                    )
+#  2 cond
+
+                elif self.selected_taxi=="Yellow Taxi":
+                    dataframe1=self.y_taxi
+                    condition_mask = (
+                        (dataframe1['PickupBorough'] == conditions['PickupBorough']) &
+                        (dataframe1['RideType'] == conditions['RideType']) &
+                        (dataframe1['Date'] == conditions['Date'])
+                    )
+
+                else:
+                    dataframe1=self.hv
+                    conditions["RideType"]="FHVHV Taxi"
+                    condition_mask = (
+                        (dataframe1['PickupBorough'] == conditions['PickupBorough']) &
+                        (dataframe1['RideType'] == conditions['RideType']) &
+                        (dataframe1['Date'] == conditions['Date'])
+                    )
+                
+                RC_for_previous_year = dataframe1.RideCount[condition_mask]
+                print(RC_for_previous_year.iloc[:0])
                 single_year_data.append(int(RC_for_previous_year))
-                
             self.previous_year_ride_counts[previous_year]=single_year_data
 
     def workday_con(self)->bool:
@@ -82,7 +119,6 @@ class Data:
             "data": [
             {
                 "PickupBorough": self.location, 
-                "RideType": self.selected_taxi, 
                 "Year": year1, 
                 "Month": month1,
                 "Day": day1, 
@@ -104,12 +140,13 @@ class Data:
         return api_result
     
     def percentage(self,year_2022_values,predicted_values):
-        percen_list = [round(((int(predict_value) - int(past_value)) / int(past_value)) * 100, 3) for past_value,predict_value in zip(year_2022_values,predicted_values)]
+        percen_list = percen_list = [round(((int(predict_value) - int(values_2022)) / int(values_2022)) * 100, 3) if int(values_2022) != 0  else 1  for values_2022, predict_value in zip(year_2022_values, predicted_values)]
         return percen_list
     
     def create_df(self,results):
         data_2021=self.previous_year_ride_counts["2021"]
         data_2022=self.previous_year_ride_counts["2022"]
+        data_2020=self.previous_year_ride_counts["2020"]
         
         # Convert dates to strings
         percentage_values=self.percentage(year_2022_values=data_2022,predicted_values=results)
@@ -122,10 +159,11 @@ class Data:
                     "Predicted_Values": results,
                     "2021": data_2021,
                     "2022": data_2022,
+                    "2020":data_2020,
                     "Percentage":percentage_values
                 })
             except:
-                pass
+                print("error")
 
         return chart_data
 

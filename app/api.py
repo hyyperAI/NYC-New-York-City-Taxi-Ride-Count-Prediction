@@ -5,8 +5,7 @@ import os
 import ssl
 
 class UrlCall:
-    def __init__(self,url,headers) -> None:
-        self.url=url
+    def __init__(self,headers) -> None:
         self.headers=headers
 
     def allowSelfSignedHttps(self,allowed):
@@ -15,9 +14,9 @@ class UrlCall:
             ssl._create_default_https_context = ssl._create_unverified_context
 
 
-    def url_call(self,data):
+    def url_call(self,data,url):
         body = str.encode(json.dumps(data))
-        req = urllib.request.Request(self.url,body, self.headers)
+        req = urllib.request.Request(url,body, self.headers)
         try:  
             response = urllib.request.urlopen(req)
             result = json.loads(response.read())
