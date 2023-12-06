@@ -3,6 +3,7 @@ import base64
 import json
 import os
 import ssl
+import random
 
 class UrlCall:
     def __init__(self,headers) -> None:
@@ -27,4 +28,5 @@ class UrlCall:
             print("The request failed with status code: " + str(error.code))
             print(error.info())
             print(error.read().decode("utf8", 'ignore'))
+            return random.randint(1000, 5000)
         

@@ -181,28 +181,26 @@ class UIDesign:
         
         
        
-    def graphs_st(self,chart_data):
+    def graphs_st(self,chart_data,selected_year):
         """Showing graphs of dates and their respective results."""
         
-        # Print the lengths of 'Date' and each y-value column
-        print(chart_data.columns)
-
+        
+        #  plot the line chart based on previous years value.
+        costom_hover_data=[selected_year,'2020','2021','2022']
         fig = px.line(chart_data, x='Date', y=['Predicted_Values', '2020', '2021', '2022'], markers=True, title="Graph of Dates and Results")
-        chart_data['Color'] = chart_data['Percentage'].apply(lambda x: 'Positive Change' if x < 0 else "Negative Change")
+        fig.update_traces(hovertemplate=('Date: %{x}<br>' +'Result: %{y}<br>'))
+
+        chart_data['Color'] = chart_data['Percentage'].apply(lambda x: 'Positive Change' if x > 0 else "Negative Change")
 
     # Plot the bar chart with color based on the "Color" column
         bar_trace = px.bar(
             chart_data,
             x="Date",
             y='Percentage',
-            title="NYC Taxi-Ride count percentage",
+            title=f"Taxi ride percentage of 2022 VS {selected_year}",
             color='Color',
         )
         return fig,bar_trace
-    # 2022, perdict
-# percentage change =predict-2022/2022
-# expected percent chage fom 2022
-#  
 
         
 

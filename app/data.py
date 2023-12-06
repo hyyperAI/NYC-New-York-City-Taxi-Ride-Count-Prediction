@@ -34,7 +34,6 @@ class Data:
             for single_date in self.dates_list:
                 month1 = str(single_date[5:7])
                 day1=str(single_date[8:])
-                # print(single_date)
                 x=previous_year+"-"+month1+"-"+day1
                 dataframe1,condition_mask=None,None
                 conditions={
@@ -43,9 +42,7 @@ class Data:
                     "Date":x
                 }
                 
-                
-                # print(self.y_taxi.Date[f"{previous_year}-{month1}-{day1}"])
-                print(f"location: {self.location},ridetype: {self.selected_taxi},date: ")
+    
 #  1 cond
                 if self.selected_taxi=="Green Taxi":
                     dataframe1=self.g_taxi
@@ -74,7 +71,6 @@ class Data:
                     )
                 
                 RC_for_previous_year = dataframe1.RideCount[condition_mask]
-                print(RC_for_previous_year.iloc[:0])
                 single_year_data.append(int(RC_for_previous_year))
             self.previous_year_ride_counts[previous_year]=single_year_data
 
@@ -144,12 +140,16 @@ class Data:
         return percen_list
     
     def create_df(self,results):
+        # getting year-vise values from dictionary
         data_2021=self.previous_year_ride_counts["2021"]
         data_2022=self.previous_year_ride_counts["2022"]
         data_2020=self.previous_year_ride_counts["2020"]
         
         # Convert dates to strings
         percentage_values=self.percentage(year_2022_values=data_2022,predicted_values=results)
+        #  the date is in formate of 2022-03-23 , to convert it to only month and date
+        self.dates_list=[item[5:] for item in self.dates_list]
+
         if len(self.dates_list) != len(results):
             return "Error: The 'dates' and 'results' lists must have the same length."
         else:

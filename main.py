@@ -19,7 +19,6 @@ green_taxi_data=pd.read_csv("./data/green.csv")
 
 
 hero=Image.open("./utilis/background/practice.jpg")
-# csv_data=pd.read_csv("./data/daily_agg.csv")
 
 
 # background_image()
@@ -30,7 +29,7 @@ st.image('./utilis/background/purpose2.webp')
 st.write("You can try the prediction model below yourself. Adjust parameters according to your need.")
 col1, col2, col3 = st.columns(3)
 with col1:
-  pickup_location = st.selectbox("Pickup Borough", ["Manhattan","Bronx", "Brooklyn", "EWR",  "Queens", "Staten Island" ])
+  pickup_location = st.selectbox("Pickup location", ["Manhattan","Bronx", "Brooklyn", "EWR",  "Queens", "Staten Island" ])
 with col2:
   selected_date = st.date_input("Date in the future", date(2023, 1, 1))
 year = int(selected_date.year)
@@ -39,7 +38,7 @@ day = int(selected_date.day)
 selected_day = selected_date.strftime("%A")[0:3]
 
 with col3:
-  taxi_type = st.selectbox("Select a taxi", ["Green Taxi", "Yellow Taxi", "High Volume For-Hire Vehicle"])
+  taxi_type = st.selectbox("Select a taxi type", ["Green Taxi", "Yellow Taxi", "High Volume For-Hire Vehicle"])
 
 #  -------------------------------------
 
@@ -50,7 +49,7 @@ api_call=UrlCall(headers={'Content-Type':'application/json'})
 
 hide_st_style = """
             <style>
-            #MainMenu {visibility: hidden;}
+            
             footer {visibility: hidden;}
             header {visibility: hidden;}
             div.embeddedAppMetaInfoBar_container__DxxL1 {visibility: hidden;}
@@ -92,15 +91,16 @@ if st.button("Use AI to predict"):
         api_result=api_call.url_call(url=yellow_taxi_api,data=api_parameter)
 
        # give result to url call
-      
-      api_result=data.clean_result(api_result) # clean the result
-      
-      result.append(api_result) # result list contain all the predicitve values
-      
-      days=f"{day}/{month}/{year}" 
-      
-      listing=[days,pickup_location,taxi_type]
-       
+      if api_result:
+        api_result=data.clean_result(api_result) # clean the result
+        
+        result.append(api_result) # result list contain all the predicitve values
+        
+        days=f"{day}/{month}/{year}" 
+        
+        listing=[days,pickup_location,taxi_type]
+      else:
+        st.markdown("The APIs are down for development purpose reason")
     header,subtitle=ui.result_display(result=result[3],description=listing)
 
 
@@ -108,6 +108,6 @@ if st.button("Use AI to predict"):
 
     my_bar.empty()
     
-    fig,bar_trace=ui.graphs_st(chart_data=df) # for line chart and bar chart
+    fig,bar_trace=ui.graphs_st(chart_data=df,selected_year=year) # for line chart and bar chart
     st.plotly_chart(fig)
     st.plotly_chart(bar_trace) 
