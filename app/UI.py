@@ -35,62 +35,6 @@ class UIDesign:
             """
         return markdown
 
-    def hero_img(self, text, subtitle,image2):
-        
-        hero_img_mark = f"""
-            <style>
-                body {{
-                    margin: 0;
-                    padding: 0;
-                    font-family: Arial, sans-serif;
-                }} 
-                .hero-container {{
-                    position: relative;
-                    width: 100%;
-                    height: 500px; /* Adjust the height as needed */
-                    overflow: hidden;
-                    text-align: center;
-                    color: #fff; /* Set text color */
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }} 
-                .hero-img {{
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                    object-position: center;
-                }} 
-                .hero-text {{
-                    z-index: 1;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }} 
-
-                .hero-text h1 {{
-                    font-size: 36px; /* Adjust the font size as needed */
-                    margin-bottom: 20px;
-                }}
-
-                .hero-text p {{
-                    font-size: 18px; /* Adjust the font size as needed */
-                    margin-bottom: 20px;
-                }} 
-            </style>
-            <div class="hero-container">
-                <img class="hero-img" src=https://media.wired.com/photos/595485ddce3e5e760d52d542/master/w_1600,c_limit/GettyImages-182859572.jpg
-                 alt="Hero Image">
-                <div class="hero-text">
-                    <h1>{text}</h1>
-                    <p>{subtitle}</p>
-                </div>
-            </div>
-        """
-        st.markdown(hero_img_mark, unsafe_allow_html=True)
 
     def result_display(self,result,description):
         header_markdown = f"""
@@ -183,8 +127,6 @@ class UIDesign:
        
     def graphs_st(self,chart_data,selected_year):
         """Showing graphs of dates and their respective results."""
-        
-        
         #  plot the line chart based on previous years value.
         costom_hover_data=[selected_year,'2020','2021','2022']
         fig = px.line(chart_data, x='Date', y=['Predicted_Values', '2020', '2021', '2022'], markers=True, title="Graph of Dates and Results")
