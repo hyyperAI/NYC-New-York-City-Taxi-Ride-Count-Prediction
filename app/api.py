@@ -16,6 +16,7 @@ class UrlCall:
 
 
     def url_call(self,data,url):
+        """To get result from api"""
         body = str.encode(json.dumps(data))
         req = urllib.request.Request(url,body, self.headers)
         try:  
