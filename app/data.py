@@ -18,7 +18,8 @@ class Data:
         self.previous_year_ride_counts={}
 
 
-    def date_range(self):
+    def date_range(self)->:
+        """ To create a list of dates for checking previous dates. 3 previous dates and 3 upcoming date based on the date that is selected to predict, 1 selected date """
         dates_list=[item.strftime("%Y/%m/%d") for item in  pd.date_range(pd.Timestamp(self.selected_date)-pd.offsets.Day(3),freq='D',periods=5)]
         future_dates=[item for item in pd.date_range(start=pd.Timestamp(self.selected_date)+pd.offsets.Day(2),freq='D',periods=2)]
         for item in future_dates:
@@ -97,14 +98,9 @@ class Data:
             season="Autumn"
             return season
         
-    def checking_results(result:int)->int:
-        if result < 0:
-            result=0
-        elif result >= 0:
-            pass
-        return result
     
     def api_parameters(self,single_date_to_predict)->dict:
+        """ all the parameters that are used to call API """
         year1 = int(single_date_to_predict[:4])
         month1 = int(single_date_to_predict[5:7])
         day1=int(single_date_to_predict[9:])
@@ -129,6 +125,7 @@ class Data:
         return data
     
     def clean_result(self,api_result)->int:
+        """ if result is less than 0 then means no taxi on that day so filter result """"
         if api_result < 0:
             api_result=0
         elif api_result >= 0:
@@ -136,10 +133,12 @@ class Data:
         return api_result
     
     def percentage(self,year_2022_values,predicted_values):
+        """ To show the change in new values with respect to previous dates""""
         percen_list = percen_list = [round(((int(predict_value) - int(values_2022)) / int(values_2022)) * 100, 3) if int(values_2022) != 0  else 1  for values_2022, predict_value in zip(year_2022_values, predicted_values)]
         return percen_list
     
     def create_df(self,results):
+        """ Create DF to show data on streamlit chart"""
         # getting year-vise values from dictionary
         data_2021=self.previous_year_ride_counts["2021"]
         data_2022=self.previous_year_ride_counts["2022"]
