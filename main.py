@@ -14,6 +14,7 @@ green_taxi_api="http://d0ddd7d2-cf15-4649-840d-0ec53a2dffad.eastus.azurecontaine
 hv_api="http://a6ac78d6-b8a3-4775-a4c4-075213d8b07e.eastus.azurecontainer.io/score"
 
 hv_data=pd.read_csv("./data/fhvhv.csv")
+# fvchv: Heavy Taxi and For-Hire Vehicle (FHV) Heavy Vechiles
 yellow_taxi_data=pd.read_csv("./data/yellow.csv")
 green_taxi_data=pd.read_csv("./data/green.csv")
 
